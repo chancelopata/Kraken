@@ -5,11 +5,11 @@
 ### todo:
 
 - Crack hashes offline
-	- [] support bruteforce attack generating own combinations
-	- [] support dictionary attack using a predefined list
+	- [ ] support bruteforce attack generating own combinations
+	- [ ] support dictionary attack using a predefined list
 - Distributed computing
-  - [] Support dstributing workload over multiple processes
-  - [] run on at least 1 linux distro (Ubuntu LTS server)
+  - [ ] Support dstributing workload over multiple processes
+  - [ ] run on at least 1 linux distro (Ubuntu LTS server)
 
 Stretch Goals
 - Support splitting workload over multiple computers with the same operating system.
