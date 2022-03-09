@@ -3,7 +3,7 @@ Attacks:
 This file is to hold all of the functions that perform attacks against a set of given hashesh.
 '''
 
-from generateHash import generateHash
+from KrakenTools import generateHash
 
 # TODO: I think if i perfect this code then i can reduce singlehash / multiple hash attacks into once function and make them easier to read.
 # I think if i perfect this code then i can reduce singlehash / multiple hash attacks into once function and make them easier to read.
