@@ -2,11 +2,19 @@
 
 ### Description:
 
-### todo:
+### Technologies utilized:
+- Open MPI
+- boost.mpi
+- C++
+### todo/notes
 
 - Crack hashes offline
-	- [ ] support bruteforce attack generating own combinations
-	- [ ] support dictionary attack using a predefined list
+	- [ ] support bruteforce attack
+	- [ ] support dictionary attack using a predefined list (do this first)
+	- combination generator
+    	- [x] base
+    	- [ ] support parallelism
+    	- [ ] support distributed computing
 - Distributed computing
   - [ ] Support dstributing workload over multiple processes
   - [ ] run on at least 1 linux distro (Ubuntu LTS server)
