@@ -3,14 +3,8 @@
     to us for creating the next hash.
 '''
 
-from lib2to3.pgen2.token import EQUAL
-from pydoc import doc
 import configparser
-from typing import Counter
 
-from numpy import partition
-
-# TODO: Create a generator object that holds the characterList, max and min string sizes and can come up with the first and last combinations.
 class CombinationGenerator():
     def __init__(self) -> None:
 
@@ -30,11 +24,16 @@ class CombinationGenerator():
             self.rotationDict[char] = counter
             counter += 1
         
-    def rotateCharacter(self,c):
-        nextIndex = self.rotationDict[c] + 1
+    def rotateCharacterN(self,c,n):
+        carry = 0
+        nextIndex = self.rotationDict[c] + n
         if len(self.characterList) <= nextIndex:
-            nextIndex = 0
-        return self.characterList[nextIndex]
+            nextIndex %= len(self.characterList)
+            carry = 1
+        elif nextIndex < 0:
+            nextIndex = nextIndex+len(self.characterList)-1
+            carry = -1
+        return (self.characterList[nextIndex],carry)
 
     def nextCombination(self,combo):
         '''
@@ -53,18 +52,136 @@ class CombinationGenerator():
             return nextCombo
 
         # Tick the leftmost digit up one and carry over the '1' if needed.
+        carry = 1
         for i, e in enumerate(combo):
-            nextCombo += self.rotateCharacter(e)
-            if nextCombo[i] != self.characterList[0]:
+            char, carry = self.rotateCharacterN(e,carry)
+            nextCombo += char
+            if not carry:
                 nextCombo += combo[i+1:]
                 break
         return nextCombo
     
-    def divideRoughly(self,n):
-        partitionSize =  len(self.characterList)/n
+    def add(self,n1,n2):
+        '''
+        Adds two numbers together of base 'n'. Bases must be equal and characterLists must be the same as well.
+        n1 and n2 are both strings created by combinationGenerator. n1 is "added" to n2.
 
-        partition = list()
-        partition.append(self.firstCombination())
+        Remember that the 'numbers' are still handled in reverse order for the sake of number generation.
+        '''
+        result = ''
+        digits = zip(n1,n2)
+        carry = 0
+        for digit in digits:
+            char, carry = self.rotateCharacterN(digit[0], self.rotationDict[digit[1]] + carry)
+            result += char
+        return result
+
+    def subtract(self,n1,n2):
+        '''
+        Subtracts n2 from n1. Does not support negative numbers.
+        '''
+        result = ''
+        digits = zip(n1,n2)
+        carry = 0
+        for digit in digits:
+            char, carry = self.rotateCharacterN(digit[0], (-(self.rotationDict[digit[1]] - carry)))
+            if carry < 0:
+                char = (self.rotateCharacterN(char,1))[0] # this line fixes subtract not carrying correctly.
+            result += char
+        return result
+
+    def greaterThan(self,n1,n2):
+        '''
+        Checks to see if n1 is greater than n2.
+        if n1 > n2 then return 1
+        if n1 <= n2 then return 0
+        '''
+        n1 = reversed(n1)
+        n2 = reversed(n2)
+        digits = zip(n1,n2)
+        for pair in digits:
+            n1Value = self.rotationDict[pair[0]]
+            n2Value = self.rotationDict[pair[1]]
+            if n1Value > n2Value:
+                return 1
+            elif n1Value < n2Value:
+                return 0
+
+    # untested
+    def divide(self,n1,n2):
+        '''
+        divides n1 by n2
+        '''
+        result = 0
+
+        while (self.greaterThan(n1,n2) or n1 == n2) and n2 != 'aaaa':
+            n1 = self.subtract(n1,n2)
+            result += 1
+        return self.decimalToBaseN(result)
+    
+    # extremely cheesey way of doing this. If n > 10,000 need new algorithm
+    def decimalToBaseN(self,n):
+        result = self.characterList[0]*self.maxStringSize
         
+        while n != 0:
+            result = self.nextCombination(result)
+            n -= 1
+        return result
 
-        #partition[0] = self.characterList[0]*
+    def convertToDecimal(self,n):
+        '''
+        Converts a system of base n to a decimal integer.
+        '''
+        base = len(self.characterList)
+        exponent = 0
+        result = 0
+        for char in n:
+            result += (self.rotationDict[char]*base**exponent)
+            exponent += 1
+        return result
+        
+    def divideIntoChunks(self,n):
+        nBaseN = self.decimalToBaseN(n)
+        chunkSize =  self.divide(self.lastCombination,nBaseN)
+        currentCombo = self.firstCombination
+        chunks = [(currentCombo,chunkSize)]
+
+        m = chunkSize
+        for i in range(n-1):
+            startPoint = m
+            m = self.add(chunkSize,m)
+            if i == (n-2):
+                endPoint = self.lastCombination
+            else:
+                endPoint = m
+            chunks.append((startPoint,endPoint))
+
+        return chunks
+
+# while c != CGen.lastCombination:
+#     print(c)
+#     c = CGen.nextCombination(c)
+# print(c)
+
+#print(CGen.convertToDecimal('bca'))
+# n = 79
+# print(f'before: {n}')
+# c = CGen.decimalToBaseN(n)
+# print(c)
+# c = CGen.convertToDecimal(c)
+# print(c)
+
+# chunks = CGen.divideIntoChunks(5)
+# print(c)
+
+# chunks.append((CGen.firstCombination,CGen.lastCombination))
+# for chunk in chunks:
+#     c = chunk[0]
+#     counter = 0
+#     while c != chunk[1]:
+#         c = CGen.nextCombination(c)
+#         counter += 1
+#     print(f'{chunk} has {counter} in its range')
+
+# print(CGen.divide('dddd','daaa'))
+# print(f"{CGen.convertToDecimal('dddd')} divided by {CGen.convertToDecimal('bbaa')} = {CGen.convertToDecimal(CGen.divide('dddd','bbaa'))}")
