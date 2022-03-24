@@ -23,8 +23,8 @@ Examples:
   # Launch a wordlist attack on a single md5 hash
   Kraken.py --md5 --hash 5f4dcc3b5aa765d61d8327deb882cf99 --wordList rockyou.txt
 
-  # Silently launch a wordlist attack on multiple hashes,   Kraken.py --md5 --hashFile someHashes.txt --wordList rockyou.txt -q -o data.txt --numProcesses 5
-using more processors and writting all successful matches to a file.
+  # Silently launch a wordlist attack on multiple hashes, using more processors and writting all successful matches to a file.
+  Kraken.py --md5 --hashFile someHashes.txt --wordList rockyou.txt -q -o data.txt --numProcesses 5
 
   # Launch a brute force attack by generating all possible combinations using information specified in Kraken.config
   Kraken.py --md5 --hash 5f4dcc3b5aa765d61d8327deb882cf99 -b
@@ -36,6 +36,10 @@ import configparser
 import os.path
 from multiprocessing import Process,Queue
 import pickle
+import pip
+
+# DEBUG ONLY
+import time
 
 from CombinationGenerator import CombinationGenerator
 from attacksParallel import parallelWordListAttackMultipleHashes, parallelWordListAttackSingleHash, parallelBruteForceSingleHash, parallelBruteForceMultipleHash, writeOutput
@@ -44,13 +48,35 @@ from KrakenTools import fileLen, divideIntoChunks
 
 
 if __name__ == '__main__':
-  
+
+    #DEBUG
+    programTime = time.time()
+
+    # get docopt if its not installed.
+    try:
+        __import__('docopt')
+    except ImportError:
+        pip.main(['install', 'docopt'])
+
     args = docopt(__doc__)
     if args['--numProcesses']:
       args['--numProcesses'] = int(args['--numProcesses'])
     # only exists for debugging...
     print('*'*20+'\n',args,'\n'+'*'*20)
 
+    # Generate config file if needed
+    config = configparser.ConfigParser()
+    if os.path.exists('Kraken.config'):
+      if not args['-q']:
+        print('Using existing Kraken.config file.')
+      config.read('Kraken.config')
+    else:
+      #TODO: do something about how string size can be set to 0 and causes infinite loops
+      if not args['-q']:
+        print('Kraken.config does not exist... creating default file now.')
+      config['DEFAULT'] = {'characterList':'abcdefghijklmnopqrstuvwxyz', 'maxStringSize': 4, 'minStringSize': 1} 
+      with open('Kraken.config','x') as f:
+        config.write(f)
 
     wordListLength = 0
     chunkSize = 0
@@ -61,21 +87,41 @@ if __name__ == '__main__':
     writeQueue = Queue()
     lookupTable = {}
 
+    # Test to make sure that the file paths are all good.
+    if args['--wordList']:
+      try:
+        with open(args['--wordList'],mode='r'):
+          pass
+      except:
+        if not args['-q']:
+          print(f'ERROR: {args["--wordList"]} does not exist!')
+        quit()
+    if args['--hashFile']:
+      try:
+        with open(args['--hashFile'],mode='r'):
+          pass
+      except:
+        if not args['-q']:
+          print(f'ERROR: {args["--hashFile"]} does not exist!')
+        quit()
+
     if args['--generateLookupTable'] and args['--numProcesses']:
       lookupTable = multiprocessing.Manager().dict()
 
     # quit if trying to run parallel without minimum required processors.
     if args['--numProcesses'] and args['--numProcesses'] < 2:
-      print("ERROR: Atleast 2 processes must be allocated.")
+      if not args['-q']:
+        print("ERROR: Atleast 2 processes must be allocated.")
       quit()
-    else:
+    elif args['--numProcesses']:
       # reserve 1 process for the writter process.
       args['--numProcesses'] -= 1
 
     if args['--lookupTable']:
       with open(args['--lookupTable'],'rb') as f:
         try:
-          print(f'loading lookup table {args["--lookupTable"]}...')
+          if not args['-q']:
+            print(f'loading lookup table {args["--lookupTable"]}...')
           lookupTable = pickle.load(f)
         except:
           print(f'ERROR: {args["--lookupTable"]} not found!')
@@ -91,19 +137,8 @@ if __name__ == '__main__':
       else:
         bruteForceChunks = CGen.divideIntoChunks(args['--numProcesses'])
 
-    # Generate config file if needed
-    config = configparser.ConfigParser()
-    if os.path.exists('Kraken.config'):
-      print('Using existing Kraken.config file.')
-      config.read('Kraken.config')
-    else:
-      #TODO: do something about how string size can be set to 0 and causes infinite loops
-      print('Kraken.config does not exist... creating default file now.')
-      config['DEFAULT'] = {'characterList':'abcdefghijklmnopqrstuvwxyz', 'maxStringSize': 4, 'minStringSize': 1} 
-      with open('Kraken.config','x') as f:
-        config.write(f)
-
-    print("==== Begin cracking hashes ======")
+    if not args['-q']:
+      print("==== Begin cracking hashes ======")
     
     ###########################
     # Select attack to launch #
@@ -120,8 +155,10 @@ if __name__ == '__main__':
         wordListAttackSingleHash(args, lookupTable)
       elif args['--wordList'] and args['--hashFile']:
         wordListAttackMultipleHashes(args, lookupTable)
-      elif args['--lookupTable']:
+      elif args['--lookupTable'] and not args['--hashFile']:
         lookupTableSingleHash(args,lookupTable)
+      elif args['--lookupTable'] and args['--hashFile']:
+        lookupTableMultipleHash(args,lookupTable)
     else:
       # parallel attacks
 
@@ -137,42 +174,48 @@ if __name__ == '__main__':
         for i in range(args['--numProcesses']):
           p[i].join()
 
-      # attack single
-      elif args['-b'] and args['--hashFile']:
-        for i in range(args['--numProcesses']):
-          p.append(Process(target=parallelBruteForceMultipleHash,args=(CGen,args,writeQueue,bruteForceChunks[i],stopQ,lookupTable)))
-          p[i].start()
-        for i in range(args['--numProcesses']):
-          p[i].join()
+      # # attack single
+      # elif args['-b'] and args['--hashFile']:
+      #   for i in range(args['--numProcesses']):
+      #     p.append(Process(target=parallelBruteForceMultipleHash,args=(CGen,args,writeQueue,bruteForceChunks[i],stopQ,lookupTable)))
+      #     p[i].start()
+      #   for i in range(args['--numProcesses']):
+      #     p[i].join()
 
-      # Attack on a single hash using wordlist
-      elif args['--wordList'] and not args['--hashFile']:
-        for i in range(args['--numProcesses']):
-          p.append(Process(target=parallelWordListAttackSingleHash, args=(args,f'chunk{i}.txt',writeQueue,stopQ,lookupTable)))
-          p[i].start()
-        for i in range(args['--numProcesses']):
-          p[i].join()
+      # # Attack on a single hash using wordlist
+      # elif args['--wordList'] and not args['--hashFile']:
+      #   for i in range(args['--numProcesses']):
+      #     p.append(Process(target=parallelWordListAttackSingleHash, args=(args,f'chunk{i}.txt',writeQueue,stopQ,lookupTable)))
+      #     p[i].start()
+      #   for i in range(args['--numProcesses']):
+      #     p[i].join()
 
-      # attack on multiple hashes using a wordlist.
-      elif args['--wordList'] and args['--hashFile']:
-        for i in range(args['--numProcesses']):
-          p.append(Process(target=parallelWordListAttackMultipleHashes, args=(args,f'chunk{i}.txt',writeQueue,stopQ,lookupTable)))
-          p[i].start()
-        for i in range(args['--numProcesses']):
-          p[i].join()
+      # # attack on multiple hashes using a wordlist.
+      # elif args['--wordList'] and args['--hashFile']:
+      #   for i in range(args['--numProcesses']):
+      #     p.append(Process(target=parallelWordListAttackMultipleHashes, args=(args,f'chunk{i}.txt',writeQueue,stopQ,lookupTable)))
+      #     p[i].start()
+      #   for i in range(args['--numProcesses']):
+      #     p[i].join()
         
       # tell writterProcess to stop monitoring for more items.
-      writeQueue.put('')
-      writterProcess.join()
 
-    print("==== End cracking hashes ========")
+    if not args['-q']:
+      print("==== End cracking hashes ========")
+    # DEBUG
+    print(f'time spent running: {(time.time()-programTime)/60} minutes')
 
     # delete created chunk files
-    for i in range(args['--numProcesses']):
-      os.remove(f'chunk{i}.txt')
+    if args['--numProcesses'] and args['--wordList']:
+      for i in range(args['--numProcesses']):
+        os.remove(f'chunk{i}.txt')
 
     # Save lookup table if needed.
     if args['--generateLookupTable']:
-      print(f'Writting lookup table to {args["--generateLookupTable"]}...')
+      if not args['-q']:
+        print(f'Writting lookup table to {args["--generateLookupTable"]}...')
       with open(args['--generateLookupTable'],'wb') as f:
         pickle.dump(dict(lookupTable), f)
+
+    # DEBUG
+    print(f'time spent running: {(time.time()-programTime)/60} minutes')
