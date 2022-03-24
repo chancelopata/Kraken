@@ -36,7 +36,6 @@ import configparser
 import os.path
 from multiprocessing import Process,Queue
 import pickle
-import pip
 
 # DEBUG ONLY
 import time
@@ -51,12 +50,6 @@ if __name__ == '__main__':
 
     #DEBUG
     programTime = time.time()
-
-    # get docopt if its not installed.
-    try:
-        __import__('docopt')
-    except ImportError:
-        pip.main(['install', 'docopt'])
 
     args = docopt(__doc__)
     if args['--numProcesses']:
