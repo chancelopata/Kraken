@@ -54,6 +54,7 @@ if __name__ == '__main__':
     args = docopt(__doc__)
     if args['--numProcesses']:
       args['--numProcesses'] = int(args['--numProcesses'])
+      
     # only exists for debugging...
     print('*'*20+'\n',args,'\n'+'*'*20)
 

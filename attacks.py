@@ -97,10 +97,9 @@ def bruteForceMultipleHash(CGen, args, lookupTable):
   combo: starting point for the text to be generated
   args: arguments from docopt
   '''
-  stopPoint = CGen.firstCombination
   with open(args['--hashFile']) as hashFile:
     combo = CGen.firstCombination
-    while True:
+    while combo != CGen.lastCombination:
 
       #compare to every hash in the file
       hashFile.seek(0)
@@ -110,8 +109,6 @@ def bruteForceMultipleHash(CGen, args, lookupTable):
 
       # stop once the final combination has been generated
       combo = CGen.nextCombination(combo)
-      if combo == stopPoint:
-        break
 
 def lookupTableSingleHash(args, lookupTable):
   hash = args['--hash']

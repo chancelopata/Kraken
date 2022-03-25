@@ -157,31 +157,3 @@ class CombinationGenerator():
             chunks.append((startPoint,endPoint))
 
         return chunks
-
-# while c != CGen.lastCombination:
-#     print(c)
-#     c = CGen.nextCombination(c)
-# print(c)
-
-#print(CGen.convertToDecimal('bca'))
-# n = 79
-# print(f'before: {n}')
-# c = CGen.decimalToBaseN(n)
-# print(c)
-# c = CGen.convertToDecimal(c)
-# print(c)
-
-# chunks = CGen.divideIntoChunks(5)
-# print(c)
-
-# chunks.append((CGen.firstCombination,CGen.lastCombination))
-# for chunk in chunks:
-#     c = chunk[0]
-#     counter = 0
-#     while c != chunk[1]:
-#         c = CGen.nextCombination(c)
-#         counter += 1
-#     print(f'{chunk} has {counter} in its range')
-
-# print(CGen.divide('dddd','daaa'))
-# print(f"{CGen.convertToDecimal('dddd')} divided by {CGen.convertToDecimal('bbaa')} = {CGen.convertToDecimal(CGen.divide('dddd','bbaa'))}")
