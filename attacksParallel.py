@@ -129,3 +129,20 @@ def parallelWordListAttackMultipleHashes(args, chunk, q, stopQueue, lookupTable)
         compareHashesThreadSafe(word, hash, args, q, lookupTable)
         if not stopQueue.empty():
           return
+
+# Attacks for cluster computing
+
+def compareHashesCluster(text, hash, args):
+  text = text.rstrip('\n')
+  hash = hash.rstrip('\n')
+  generatedHash = generateHash(text,args)
+
+  if generatedHash == hash:
+    print(f'Success: {text} : {hash}')
+
+def wordlistAttackCluster(args,chunk):
+  with open(chunk,mode='r',encoding='latin-1') as wordList, open(args['--hashFile'],'r') as hashFile:
+    for word in wordList:
+      hashFile.seek(0)
+      for hash in hashFile:
+        compareHashesCluster(word, hash, args)
