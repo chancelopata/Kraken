@@ -29,13 +29,16 @@ def divideIntoChunks (linesInFile,filePath,numProcesses):
 
     currentLine = 0
     with open(filePath,mode='r',encoding='latin-1') as file:
+        listOfChunks = []
         for i in range(numProcesses):
+            listOfChunks.append(f'chunk{i}.txt')
             with open(f'chunk{i}.txt',mode='w+',encoding='latin-1') as chunk:
                 for line in file:
                     chunk.write(line)
                     currentLine += 1
                     if not (currentLine % chunkSize):
                         break
+        return listOfChunks
 
 def generateHash(text,args):
   '''

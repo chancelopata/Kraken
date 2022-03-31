@@ -87,6 +87,7 @@ if __name__ == '__main__':
     p = list()
     writeQueue = Queue()
     lookupTable = {}
+    dataForCluster = None
 
     # Test to make sure that the file paths are all good.
     if args['--wordList']:
@@ -135,13 +136,13 @@ if __name__ == '__main__':
         if not args['-q']:
           print("Distributing wordlist among processes... this may take a moment.")
         if args['--hostFile'] and rank == 0:
-          divideIntoChunks(wordListLength, args['--wordList'], args[comm.Get_size])
+          dataForCluster = divideIntoChunks(wordListLength, args['--wordList'], comm.Get_size())
         elif not args['--hostFile']:
-          divideIntoChunks(wordListLength, args['--wordList'], args[comm.Get_size])
+          divideIntoChunks(wordListLength, args['--wordList'], args['--numProcesses'])
       else:
         bruteForceChunks = CGen.divideIntoChunks(args['--numProcesses'])
 
-    if not args['-q']:
+    if not args['-q'] and not args['--hostFile']:
       print("==== Begin cracking hashes ======")
     
     ###########################
@@ -150,13 +151,12 @@ if __name__ == '__main__':
 
     # Cluster attacks
     if args['--hostFile']:
-      chunk = f'chunk{rank}'
-      comm.barrier()
+      chunk = comm.scatter(dataForCluster,root=0)
+      print(f'{rank} is working on {chunk}')
       wordlistAttackCluster(args,chunk)
 
     # Single thread attacks
     elif not args['--numProcesses']:
-      # single thread attacks
       if args['-b'] and not args['--hashFile']:
         bruteForceSingleHash(CGen, args, lookupTable)
       elif args['-b'] and args['--hashFile']:
@@ -210,7 +210,7 @@ if __name__ == '__main__':
         
       # tell writterProcess to stop monitoring for more items.
 
-    if not args['-q']:
+    if not args['-q'] and not args['--hostFile']:
       print("==== End cracking hashes ========")
     # DEBUG
     print(f'time spent running: {(time.time()-programTime)/60} minutes')
