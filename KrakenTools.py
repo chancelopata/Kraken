@@ -22,14 +22,12 @@ def divideIntoChunks (linesInFile,filePath,numProcesses):
     '''
     chunkSize = -(linesInFile // -numProcesses)
     chunkEndPoints = [chunkSize]
-
+    listOfChunks = []
     # get a list of all the line numbers where a chunk should stop writing and a new one should be made.
     for i in range(numProcesses-1):
         chunkEndPoints.append(chunkEndPoints[i] + chunkSize)
-
     currentLine = 0
     with open(filePath,mode='r',encoding='latin-1') as file:
-        listOfChunks = []
         for i in range(numProcesses):
             listOfChunks.append(f'chunk{i}.txt')
             with open(f'chunk{i}.txt',mode='w+',encoding='latin-1') as chunk:
@@ -38,7 +36,7 @@ def divideIntoChunks (linesInFile,filePath,numProcesses):
                     currentLine += 1
                     if not (currentLine % chunkSize):
                         break
-        return listOfChunks
+    return listOfChunks
 
 def generateHash(text,args):
   '''

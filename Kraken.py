@@ -43,7 +43,7 @@ from mpi4py import MPI
 import time
 
 from CombinationGenerator import CombinationGenerator
-from attacksParallel import parallelWordListAttackMultipleHashes, parallelWordListAttackSingleHash, parallelBruteForceSingleHash, parallelBruteForceMultipleHash, writeOutput, wordlistAttackCluster
+from attacksParallel import parallelWordListAttackMultipleHashes, parallelWordListAttackSingleHash, parallelBruteForceSingleHash, parallelBruteForceMultipleHash, wordlistAttackClusterSingleHash, writeOutput
 from attacks import *
 from KrakenTools import fileLen, divideIntoChunks
 
@@ -133,11 +133,9 @@ if __name__ == '__main__':
     if args['--numProcesses']:
       if args['--wordList']:
         wordListLength = fileLen(args['--wordList'])
-        if not args['-q']:
-          print("Distributing wordlist among processes... this may take a moment.")
-        if args['--hostFile'] and rank == 0:
-          dataForCluster = divideIntoChunks(wordListLength, args['--wordList'], comm.Get_size())
-        elif not args['--hostFile']:
+        if not args['--hostFile']:
+          if not args['-q']:
+            print("Distributing wordlist among processes... this may take a moment.")
           divideIntoChunks(wordListLength, args['--wordList'], args['--numProcesses'])
       else:
         bruteForceChunks = CGen.divideIntoChunks(args['--numProcesses'])
@@ -151,9 +149,13 @@ if __name__ == '__main__':
 
     # Cluster attacks
     if args['--hostFile']:
+      if rank == 0:
+        wordListLength = fileLen(args['--wordList'])
+        dataForCluster = divideIntoChunks(wordListLength, args['--wordList'], comm.Get_size())
+      print(dataForCluster)
       chunk = comm.scatter(dataForCluster,root=0)
       print(f'{rank} is working on {chunk}')
-      wordlistAttackCluster(args,chunk)
+      wordlistAttackClusterSingleHash(args,chunk)
 
     # Single thread attacks
     elif not args['--numProcesses']:

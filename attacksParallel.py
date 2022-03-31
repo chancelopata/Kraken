@@ -140,7 +140,13 @@ def compareHashesCluster(text, hash, args):
   if generatedHash == hash:
     print(f'Success: {text} : {hash}')
 
-def wordlistAttackCluster(args,chunk):
+def wordlistAttackClusterSingleHash(args,chunk):
+    hash = args['--hash']
+    with open(args['--wordList'],encoding='latin-1', mode='r') as wordList:
+      for word in wordList:
+        compareHashesCluster(word, hash, args)
+
+def wordlistAttackClusterMultipleHash(args,chunk):
   with open(chunk,mode='r',encoding='latin-1') as wordList, open(args['--hashFile'],'r') as hashFile:
     for word in wordList:
       hashFile.seek(0)
