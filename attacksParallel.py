@@ -138,7 +138,10 @@ def compareHashesCluster(text, hash, args):
   generatedHash = generateHash(text,args)
 
   if generatedHash == hash:
-    print(f'Success: {text} : {hash}')
+    from mpi4py import MPI
+    c = MPI.COMM_WORLD
+    r = c.Get_rank()
+    print(f'Success: {text} : {hash} : found by rank {r}')
 
 def wordlistAttackClusterSingleHash(args,chunk):
     hash = args['--hash']
