@@ -145,7 +145,7 @@ def compareHashesCluster(text, hash, args):
 
 def wordlistAttackClusterSingleHash(args,chunk):
     hash = args['--hash']
-    with open(args['--wordList'],encoding='latin-1', mode='r') as wordList:
+    with open(chunk,encoding='latin-1', mode='r') as wordList:
       for word in wordList:
         compareHashesCluster(word, hash, args)
 
