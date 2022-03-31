@@ -43,7 +43,7 @@ from mpi4py import MPI
 import time
 
 from CombinationGenerator import CombinationGenerator
-from attacksParallel import parallelWordListAttackMultipleHashes, parallelWordListAttackSingleHash, parallelBruteForceSingleHash, parallelBruteForceMultipleHash, wordlistAttackClusterSingleHash, writeOutput
+from attacksParallel import parallelWordListAttackMultipleHashes, parallelWordListAttackSingleHash, parallelBruteForceSingleHash, parallelBruteForceMultipleHash, wordlistAttackClusterMultipleHash, wordlistAttackClusterSingleHash, writeOutput
 from attacks import *
 from KrakenTools import fileLen, divideIntoChunks
 
@@ -155,7 +155,10 @@ if __name__ == '__main__':
       print(dataForCluster)
       chunk = comm.scatter(dataForCluster,root=0)
       print(f'{rank} is working on {chunk}')
-      wordlistAttackClusterSingleHash(args,chunk)
+      if not args['--hashFile']:
+        wordlistAttackClusterSingleHash(args,chunk)
+      else:
+        wordlistAttackClusterMultipleHash(args,chunk)
 
     # Single thread attacks
     elif not args['--numProcesses']:
