@@ -68,8 +68,9 @@ if __name__ == '__main__':
     # Generate config file if needed
     config = configparser.ConfigParser()
     if os.path.exists('Kraken.config'):
-      if not args['-q'] or not args['--hostFile']:
-          print('Using existing Kraken.config file.')
+      if not args['-q']:
+        if not args['--hostFile']:
+            print('Using existing Kraken.config file.')
       config.read('Kraken.config')
     else:
       #TODO: do something about how string size can be set to 0 and causes infinite loops
