@@ -48,10 +48,11 @@ def writeOutput(args, q, stopQueue):
           if not args['-q']:
             print(msg)
           f.write(msg +'\n')
-          if msg[0] == "S":
-            stopQueue.put("stop")
-            return
+          if msg[0] == "S" and args['--greed']:
+              stopQueue.put("stop")
+              return
         else:
+          stopQueue.put("stop")
           return
   # run this if it does not need to write to a file.
   elif not args['-q']:
@@ -59,10 +60,11 @@ def writeOutput(args, q, stopQueue):
         msg = q.get()
         if msg != '':
           print(msg)
-          if msg[0] == 'S':
-            stopQueue.put("stop")
-            return
+          if msg[0] == 'S' and args['--greed']:
+              stopQueue.put("stop")
+              return
         else:
+          stopQueue.put("stop")
           return
 
 def parallelBruteForceSingleHash(CGen, args, q, chunk, stopQueue, lookupTable):

@@ -63,7 +63,7 @@ if __name__ == '__main__':
       rank = comm.Get_rank()
     
     # only exists for debugging...
-    print('*'*20+'\n',args,'\n'+'*'*20)
+    # print('*'*20+'\n',args,'\n'+'*'*20)
 
     # Generate config file if needed
     config = configparser.ConfigParser()
@@ -214,11 +214,12 @@ if __name__ == '__main__':
           p[i].join()
         
       # tell writterProcess to stop monitoring for more items.
+      writeQueue.put('')
 
     if not args['-q'] and not args['--hostFile']:
       print("==== End cracking hashes ========")
     # DEBUG
-    print(f'time spent running: {(time.time()-programTime)/60} minutes')
+    #print(f'time spent running: {(time.time()-programTime)/60} minutes')
 
     # delete created chunk files
     if args['--numProcesses'] and args['--wordList']:
@@ -233,4 +234,4 @@ if __name__ == '__main__':
         pickle.dump(dict(lookupTable), f)
 
     # DEBUG
-    print(f'time spent running: {(time.time()-programTime)/60} minutes')
+    #print(f'time spent running: {(time.time()-programTime)/60} minutes')

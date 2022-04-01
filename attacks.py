@@ -144,6 +144,7 @@ def lookupTableMultipleHash(args, lookupTable):
     # super lazy but just pass correct string to compareHashes because it already writes to file and deals with output. Saves 20 lines.
     hashFile.seek(0)
     for hash in hashFile:
+      hash = hash.rstrip('\n')
       if hash in lookupTable:
         compareHashes(lookupTable[hash],hash,args,lookupTable)
       else:
