@@ -51,7 +51,7 @@ from KrakenTools import fileLen, divideIntoChunks
 if __name__ == '__main__':
 
     #DEBUG
-    programTime = time.time()
+    #programTime = time.time()
 
     args = docopt(__doc__)
     if args['--numProcesses']:
@@ -152,9 +152,8 @@ if __name__ == '__main__':
       if rank == 0:
         wordListLength = fileLen(args['--wordList'])
         dataForCluster = divideIntoChunks(wordListLength, args['--wordList'], comm.Get_size())
-      print(dataForCluster)
       chunk = comm.scatter(dataForCluster,root=0)
-      print(f'{rank} is working on {chunk}')
+      #print(f'{rank} is working on {chunk}')
       if not args['--hashFile']:
         wordlistAttackClusterSingleHash(args,chunk)
       else:
