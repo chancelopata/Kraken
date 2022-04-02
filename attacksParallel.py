@@ -94,7 +94,7 @@ def parallelBruteForceMultipleHash(CGen, args, q, chunk, stopQueue, lookupTable)
   chunk: a tuple of a starting combination and the ending combination.
 
   '''
-  stopPoint = CGen.nextCombination(chunk[1])
+  stopPoint = chunk[1]
   combo = chunk[0]
   with open(args['--hashFile']) as hashFile:
     while True:
@@ -108,6 +108,12 @@ def parallelBruteForceMultipleHash(CGen, args, q, chunk, stopQueue, lookupTable)
       combo = CGen.nextCombination(combo)
       if combo == stopPoint:
         break
+    # Catch the last combo.
+    hashFile.seek(0)
+    for hash in hashFile:
+      if not stopQueue.empty():
+        return
+      compareHashesThreadSafe(combo, hash, args, q, lookupTable)
 
 def parallelWordListAttackSingleHash(args, chunk, q, stopQueue, lookupTable):
   '''
